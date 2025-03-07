@@ -243,7 +243,7 @@ func TestAll(t *testing.T) {
 	}
 
 	sessions := make(map[string][]byte)
-	for i := 0; i < 4; i++ {
+	for i := range 4 {
 		key := fmt.Sprintf("token_%v", i)
 		val := []byte(key)
 		err = client.Do(ctx, client.B().Set().Key(r.prefix+key).Value(key).ExSeconds(100).Build()).Error()
