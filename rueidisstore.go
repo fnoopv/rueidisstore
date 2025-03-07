@@ -48,7 +48,7 @@ func (ru *RueidisStore) FindCtx(ctx context.Context, token string) ([]byte, bool
 func (ru *RueidisStore) CommitCtx(ctx context.Context, token string, b []byte, expiry time.Time) error {
 	err := ru.client.Do(
 		ctx,
-		ru.client.B().Set().Key(ru.prefix+token).Value(string(b)).Ex(expiry.Sub(time.Now())).Build(),
+		ru.client.B().Set().Key(ru.prefix+token).Value(string(b)).Ex(time.Since(expiry).Abs()).Build(),
 	).Error()
 
 	return err
@@ -57,7 +57,12 @@ func (ru *RueidisStore) CommitCtx(ctx context.Context, token string, b []byte, e
 // DeleteCtx removes a session token and corresponding data from the RueidisStore
 // instance.
 func (ru *RueidisStore) DeleteCtx(ctx context.Context, token string) error {
-	return ru.client.Do(ctx, ru.client.B().Del().Key(ru.prefix+token).Build()).Error()
+	err := ru.client.Do(ctx, ru.client.B().Del().Key(ru.prefix+token).Build()).Error()
+	if rueidis.IsRedisNil(err) {
+		return nil
+	}
+
+	return err
 }
 
 // AllCtx returns a map containing the token and data for all active (i.e.
